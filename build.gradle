@@ -1,0 +1,139 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.2'
+	id 'io.spring.dependency-management' version '1.0.12.RELEASE'
+	id 'java'
+	id "nu.studer.jooq" version "5.2.1"
+}
+
+group = 'com.i4'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'ch.qos.logback', module: 'logback-classic'
+		exclude module: 'commons-logging'
+	}
+	implementation {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'ch.qos.logback', module: 'logback-classic'
+		exclude module: 'commons-logging'
+	}
+	runtimeOnly {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'ch.qos.logback', module: 'logback-classic'
+		exclude module: 'commons-logging'
+	}
+	testImplementation {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+		exclude group: 'ch.qos.logback', module: 'logback-classic'
+		exclude module: 'commons-logging'
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.jooq:jooq'
+	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.h2database:h2'
+	runtimeOnly 'io.r2dbc:r2dbc-h2'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+	jooqGenerator 'org.jooq:jooq-meta-extensions:3.14.11'
+	jooqGenerator 'com.h2database:h2:1.4.200'
+	compileOnly "org.mapstruct:mapstruct:$mapstructVersion", "org.projectlombok:lombok"
+	annotationProcessor "org.projectlombok:lombok", "org.mapstruct:mapstruct-processor:$mapstructVersion"
+}
+
+compileJava {
+	options.compilerArgs = [
+			'-Amapstruct.defaultComponentModel=spring',
+			'-Amapstruct.unmappedTargetPolicy=IGNORE'
+	]
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+jooq {
+	version = '3.14.11'
+	edition = nu.studer.gradle.jooq.JooqEdition.OSS
+	configurations {
+		main {
+			generateSchemaSourceOnCompilation = true
+			generationTool {
+				logging = org.jooq.meta.jaxb.Logging.WARN
+				jdbc {
+					driver = 'org.h2.Driver'
+					url = 'r2dbc:h2:mem:///i4digital'
+					user = 'sa'
+					password = ''
+				}
+				generator {
+					strategy {
+						name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+					}
+					database {
+						name = 'org.jooq.meta.extensions.ddl.DDLDatabase'
+						properties {
+							property {
+								key = 'scripts'
+								value = 'src/main/resources/schema-jooq.sql'
+							}
+							property {
+								key = 'sort'
+								value = 'semantic'
+							}
+							property {
+								key = 'unqualifiedSchema'
+								value = 'none'
+							}
+							property {
+								key = 'defaultNameCase'
+								value = 'as_is'
+							}
+						}
+						includeTables = true
+						includeRoutines = false
+						includePackages = false
+						includePackageRoutines = false
+						includePackageUDTs = false
+						includePackageConstants = false
+						includeUDTs = false
+						includeSequences = false
+						includePrimaryKeys = true
+						includeUniqueKeys = true
+						includeForeignKeys = true
+						includeCheckConstraints = true
+						includeIndexes = true
+					}
+					generate {
+						daos = false
+						records = false
+						instanceFields = true
+						relations = true
+						javaTimeTypes = true
+					}
+					target {
+						packageName = 'com.i4.laboratory.domain.entities'
+						directory = 'build/generated-sources/jooq'
+					}
+				}
+			}
+		}
+	}
+}

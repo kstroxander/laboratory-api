@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" strict="false" name="AppLoggerConfig">
+    <Properties>
+        <Property name="stdout_log_pattern">%d [%-5p] [%t] %c{1} - %m%n</Property>
+        <Property name="main_log_filename">${sys:user.home}/logs/laboratory.log</Property>
+        <Property name="main_log_pattern">%d [%-5p] [%t] %c{1} - %m%n</Property>
+    </Properties>
+
+    <!-- ******************************** Appenders ****************************************** -->
+
+    <Appenders>
+        <Console name="Stdout" target="SYSTEM_OUT">
+            <PatternLayout pattern="${stdout_log_pattern}" />
+        </Console>
+
+        <RollingRandomAccessFile name="MainRollingRandomAccessFile" append="true"
+                                 fileName="${main_log_filename}" filePattern="${main_log_filename}_%d{yyyy-MM-dd}.gz">
+            <PatternLayout>
+                <Pattern>${main_log_pattern}</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="2" />
+            </Policies>
+        </RollingRandomAccessFile>
+
+
+        <!-- ******************************* Asincronos ******************************* -->
+
+        <Async name="AsyncStdout">
+            <AppenderRef ref="Stdout" />
+        </Async>
+
+        <Async name="MainAsyncRollingAppender">
+            <AppenderRef ref="MainRollingRandomAccessFile" />
+        </Async>
+
+    </Appenders>
+
+    <!-- ******************************** Loggers ****************************************** -->
+    <Loggers>
+        <Logger name="com.i4" additivity="false" level="debug">
+            <AppenderRef ref="AsyncStdout" />
+            <AppenderRef ref="MainAsyncRollingAppender" />
+        </Logger>
+        <Logger name="org.springframework.r2dbc" additivity="false" level="debug">
+            <AppenderRef ref="AsyncStdout" />
+            <AppenderRef ref="MainAsyncRollingAppender" />
+        </Logger>
+        <Logger name="org.springframework.data.r2dbc" additivity="false" level="debug">
+            <AppenderRef ref="AsyncStdout" />
+            <AppenderRef ref="MainAsyncRollingAppender" />
+        </Logger>
+
+        <!-- ******************************** Logger Raiz ****************************************** -->
+        <Root level="warn">
+            <AppenderRef ref="AsyncStdout" />
+            <AppenderRef ref="MainAsyncRollingAppender" />
+        </Root>
+    </Loggers>
+
+</Configuration>
