@@ -11,6 +11,8 @@ import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.reactive.config.CorsRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 import java.time.ZoneOffset;
@@ -36,5 +38,15 @@ public class ReactiveWebConfiguration implements WebFluxConfigurer {
                 .build();
         configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objMapper));
         configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objMapper));
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods(CorsConfiguration.ALL)
+                .allowedHeaders(CorsConfiguration.ALL)
+                .exposedHeaders("*")
+                .maxAge(3600);
     }
 }
